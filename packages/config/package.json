@@ -1,0 +1,17 @@
+{
+  "name": "@repo/config",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./typescript/base": "./typescript/base.json",
+    "./typescript/nextjs": "./typescript/nextjs.json",
+    "./tailwind/base.css": "./tailwind/base.css",
+    "./tailwind/postcss": "./tailwind/postcss.config.mjs",
+    "./eslint": "./eslint/index.js"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

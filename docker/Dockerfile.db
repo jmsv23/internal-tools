@@ -1,0 +1,24 @@
+# Prisma migration container
+FROM node:20-alpine
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@10.12.1 --activate
+
+WORKDIR /app
+
+# Copy only what's needed for migrations
+COPY packages/db/package.json ./packages/db/
+COPY packages/db/prisma ./packages/db/prisma
+COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+
+# Create minimal root package.json
+RUN echo '{"name":"root","private":true}' > package.json
+
+# Install Prisma dependencies
+RUN cd packages/db && pnpm add prisma @prisma/client
+
+WORKDIR /app/packages/db
+
+# Run migrations on startup
+CMD ["npx", "prisma", "migrate", "deploy"]
