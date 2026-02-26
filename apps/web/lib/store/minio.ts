@@ -17,11 +17,11 @@ export type PresignedUrlOptions = MinioPresignedUrlOptions;
 // Load MinIO configuration from environment variables
 function loadMinioConfig(): MinioConfig {
   const endPoint = process.env.MINIO_ENDPOINT || 'localhost';
-  const port = parseInt(process.env.MINIO_PORT || '9100', 10);
+  const port = parseInt(process.env.MINIO_PORT || '9200', 10);
   const useSSL = process.env.MINIO_USE_SSL === 'true';
   const accessKey = process.env.MINIO_ACCESS_KEY || 'minioadmin';
   const secretKey = process.env.MINIO_SECRET_KEY || 'minioadmin';
-  const defaultBucket = process.env.MINIO_BUCKET_NAME || 'toddlertales-dev';
+  const defaultBucket = process.env.MINIO_BUCKET_NAME || 'internal-tools-dev';
   const region = process.env.MINIO_REGION || 'us-east-1';
 
   return {
