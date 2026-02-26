@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: internal-tools
+      POSTGRES_DB: internal_tools
     ports:
       - "54329:5432"
     volumes:

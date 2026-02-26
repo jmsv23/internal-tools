@@ -19,7 +19,7 @@ model User {
 
   sessions      Session[]
   accounts      Account[]
-  stories       Story[]
+  audios       Audio[]
 
   // App-specific fields
   stripeCustomerId String? @unique
@@ -102,5 +102,5 @@ model Audio {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("stories")
+  @@map("audios")
 }
