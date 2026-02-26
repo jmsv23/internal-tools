@@ -2,7 +2,7 @@ import * as Minio from 'minio';
 import type { BucketItemCopy } from 'minio';
 import { logger } from '@repo/logger';
 import { Readable } from 'stream';
-import type { MinioConfig, MinioUploadOptions, MinioPresignedUrlOptions } from '../types';
+import type { MinioConfig, MinioUploadOptions, MinioPresignedUrlOptions } from '@/lib/types';
 
 // Define UploadedObjectInfo since it's not exported from minio main module
 export interface UploadedObjectInfo {
