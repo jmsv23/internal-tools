@@ -7,16 +7,34 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: saas
+      POSTGRES_DB: internal-tools
     ports:
-      - "54326:5432"
+      - "54329:5432"
     volumes:
-      - saas_data:/var/lib/postgresql/data
+      - internal_tools_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9090"
+    ports:
+      - "9200:9000"
+      - "9290:9090"
+    volumes:
+      - internal_tools_minio_data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
 volumes:
-  saas_data:
+  internal_tools_data:
+  internal_tools_minio_data:
