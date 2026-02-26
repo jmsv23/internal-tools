@@ -57,6 +57,8 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         content: body.content,
+        voiceId: body.voiceId,
+        status: "processing",
       },
     });
 
@@ -81,12 +83,12 @@ export async function POST(request: NextRequest) {
     // Simulate successful audio generation
     const audioObjectPath = `audio/${audio.id}.mp3`;
 
-    // 8. Save object path to database and mark as premium
+    // 8. Save object path to database and update status
     const updatedAudio = await db.audio.update({
       where: { id: audio.id },
       data: {
         audioUrl: audioObjectPath,
-        premium: true, // Mark as premium when using Gemini TTS
+        status: "ready",
       },
     });
 

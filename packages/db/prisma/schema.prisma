@@ -97,6 +97,10 @@ model Audio {
   userId              String
   content             String?
   audioUrl            String?
+  voiceId             String?   // Store selected voice (gemini voice id)
+  duration            Int?      // Audio duration in seconds
+  fileSize            Int?      // File size in bytes
+  status              String?   @default("processing") // processing, ready, failed
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
