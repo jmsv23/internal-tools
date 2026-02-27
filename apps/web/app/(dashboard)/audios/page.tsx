@@ -4,12 +4,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DeleteAudioButton from "@/components/audio/delete-audio-button";
 
 interface AudioListPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     limit?: string;
-  };
+  }>;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -125,13 +126,22 @@ export default async function AudioListPage({ searchParams }: AudioListPageProps
                       </p>
                     </div>
 
-                    {audio.status === "ready" && (
-                      <Link href={`/audio/${audio.id}`}>
-                        <div className="text-sm text-primary hover:underline">
-                          View Details →
-                        </div>
-                      </Link>
-                    )}
+                    <div className="flex justify-between items-center">
+                      {audio.status === "ready" && (
+                        <Link href={`/audio/${audio.id}`}>
+                          <div className="text-sm text-primary hover:underline">
+                            View Details →
+                          </div>
+                        </Link>
+                      )}
+                      
+                      <DeleteAudioButton
+                        audioId={audio.id}
+                        audioTitle={audio.title || undefined}
+                        variant="ghost"
+                        size="sm"
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

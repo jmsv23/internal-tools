@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Commercial Photorealism",
+    "description": "High-end product or portrait style with tack-sharp focus and natural textures.",
+    "prompt": "Raw photo of {{subject}}, extreme detail, visible skin pores, 8k resolution, shot on 35mm lens, f/1.8, natural lighting, highly realistic textures, no airbrushing."
+  },
+  {
+    "name": "Cinematic Neo-Noir",
+    "description": "Moody, high-contrast style with dramatic lighting and a film-still aesthetic.",
+    "prompt": "Cinematic film still of {{subject}}, anamorphic lens, high contrast, heavy shadows, teal and orange color grading, misty atmosphere, rim lighting, 4k, moody aesthetic."
+  },
+  {
+    "name": "Studio Ghibli Inspired",
+    "description": "Nostalgic, hand-painted anime style with lush environments and soft colors.",
+    "prompt": "Studio Ghibli style illustration of {{subject}}, hand-painted texture, lush scenery, soft pastel color palette, whimsical atmosphere, high-detail cel-shading, Joe Hisaishi vibe."
+  },
+  {
+    "name": "SaaS Modern Flat Design",
+    "description": "Clean, vector-based style ideal for tech landing pages and app icons.",
+    "prompt": "Minimalist vector illustration of {{subject}}, flat design, clean lines, bold geometric shapes, solid color background, professional tech aesthetic, Adobe Illustrator style, 2D."
+  },
+  {
+    "name": "Cyberpunk 2026",
+    "description": "Neon-infused, futuristic aesthetic with rainy textures and high-tech elements.",
+    "prompt": "Cyberpunk aesthetic, {{subject}}, neon magenta and cyan lighting, rainy city street background, glowing accents, hyper-detailed tech, volumetric fog, futuristic urban vibe."
+  },
+  {
+    "name": "Retro 90s Fujifilm",
+    "description": "Candid, nostalgic film look with organic grain and slightly faded colors.",
+    "prompt": "Candid 90s disposable camera shot of {{subject}}, Fujifilm Superia 400 stock, heavy film grain, slight motion blur, flash photography, nostalgic aesthetic, lo-fi textures."
+  },
+  {
+    "name": "Isometric 3D Render",
+    "description": "Toy-like, miniature style often used for icons or architectural visualizations.",
+    "prompt": "Isometric 3D render of {{subject}}, Octane render, soft clay textures, vibrant colors, tilt-shift effect, miniature world aesthetic, clean lighting, high resolution."
+  },
+  {
+    "name": "Dark Fantasy Oil Painting",
+    "description": "Classical fine art style with heavy brushstrokes and a somber, epic mood.",
+    "prompt": "Oil painting of {{subject}}, dark fantasy style, heavy impasto brushstrokes, dramatic chiaroscuro lighting, weathered canvas texture, epic composition, classical art influence."
+  }
+]

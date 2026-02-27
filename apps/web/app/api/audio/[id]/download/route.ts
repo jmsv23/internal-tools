@@ -5,9 +5,9 @@ import { db } from "@repo/db";
 import { getPresignedUrl } from "@/lib/store/minio";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
@@ -25,9 +25,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     // 2. Get the audio and verify it belongs to the current user
+    const { id } = await params;
     const audio = await db.audio.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: session.user.id,
       },
     });

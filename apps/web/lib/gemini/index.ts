@@ -5,6 +5,6 @@ export {
 } from "./content-validation";
 export {
   generateStory,
-  type StoryGenerationInput,
-  type StoryGenerationResult,
+  type AudioContentGenerationInput as StoryGenerationInput,
+  type AudioContentGenerationResult as StoryGenerationResult,
 } from "./story-generation";

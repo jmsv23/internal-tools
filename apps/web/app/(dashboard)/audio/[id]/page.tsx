@@ -4,11 +4,12 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DeleteAudioButton from "@/components/audio/delete-audio-button";
 
 interface AudioDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function AudioDetailPage({ params }: AudioDetailPageProps) {
@@ -117,7 +118,7 @@ export default async function AudioDetailPage({ params }: AudioDetailPageProps) 
                     Your browser does not support the audio element.
                   </audio>
                   
-                  <div className="mt-4">
+                  <div className="mt-4 flex gap-2">
                     <a 
                       href={`/api/audio/${audio.id}/download`}
                       download
@@ -125,6 +126,11 @@ export default async function AudioDetailPage({ params }: AudioDetailPageProps) 
                     >
                       Download Audio
                     </a>
+                    <DeleteAudioButton
+                      audioId={audio.id}
+                      audioTitle={audio.title || undefined}
+                      variant="outline"
+                    />
                   </div>
                 </div>
               )}
