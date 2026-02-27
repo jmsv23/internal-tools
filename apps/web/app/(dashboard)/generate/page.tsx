@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { GEMINI_VOICES, DEFAULT_GEMINI_VOICE_ID, type GeminiVoiceId } from "@/lib/gemini/voices";
 
 interface AudioFormData {
+  title: string;
   content: string;
   voiceId: GeminiVoiceId;
 }
@@ -15,11 +16,17 @@ interface AudioFormData {
 export default function GenerateAudioPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<AudioFormData>({
+    title: "",
     content: "",
     voiceId: DEFAULT_GEMINI_VOICE_ID,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, title: e.target.value }));
+    if (error) setError(null);
+  };
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, content: e.target.value }));
@@ -33,6 +40,11 @@ export default function GenerateAudioPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.title.trim()) {
+      setError("Please enter a title for your audio");
+      return;
+    }
+
     if (!formData.content.trim()) {
       setError("Please enter some text to generate audio");
       return;
@@ -72,6 +84,19 @@ export default function GenerateAudioPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <input
+                id="title"
+                type="text"
+                className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                placeholder="Enter a title to identify this audio..."
+                value={formData.title}
+                onChange={handleTitleChange}
+                disabled={isSubmitting}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="content">Text Content</Label>
               <textarea

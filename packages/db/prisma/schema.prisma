@@ -95,6 +95,7 @@ model Subscription {
 model Audio {
   id                  String   @id @default(cuid())
   userId              String
+  title               String?
   content             String?
   audioUrl            String?
   voiceId             String?   // Store selected voice (gemini voice id)

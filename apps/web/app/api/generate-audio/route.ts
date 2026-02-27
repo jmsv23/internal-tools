@@ -11,6 +11,7 @@ import { getGeminiVoiceById, type GeminiVoiceId } from "@/lib/gemini/tts-client"
 interface RequestBody {
   voiceId?: GeminiVoiceId;
   content?: string;
+  title?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
     const audio = await db.audio.create({
       data: {
         userId: session.user.id,
+        title: body.title,
         content: body.content,
         voiceId: body.voiceId,
         status: "processing",

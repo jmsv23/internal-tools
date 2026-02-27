@@ -83,7 +83,9 @@ export default async function AudioListPage({ searchParams }: AudioListPageProps
             {audios.map((audio) => (
               <Card key={audio.id}>
                 <CardHeader>
-                  <CardTitle className="text-lg">Audio {audio.id.slice(0, 8)}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {audio.title || `Audio ${audio.id.slice(0, 8)}`}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">

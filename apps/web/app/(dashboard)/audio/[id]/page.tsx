@@ -42,7 +42,7 @@ export default async function AudioDetailPage({ params }: AudioDetailPageProps) 
 
       <Card>
         <CardHeader>
-          <CardTitle>Audio Details</CardTitle>
+          <CardTitle>{audio.title || "Audio Details"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
