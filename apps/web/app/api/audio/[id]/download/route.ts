@@ -50,7 +50,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     // 4. Generate signed URL from MinIO
     const presignedUrl = await getPresignedUrl(
       audio.audioUrl,
-      { expirySeconds: 3600 }, // 1 hour expiry
+      { expirySeconds: 3600 },
       process.env.MINIO_BUCKET_NAME || "internal-tools-dev"
     );
 
@@ -61,11 +61,27 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 5. Return the signed URL
-    return NextResponse.json({
-      url: presignedUrl,
-      filename: `audio-${audio.id}.mp3`,
-      audioId: audio.id,
+    // 5. Fetch the audio file from MinIO
+    const audioResponse = await fetch(presignedUrl);
+
+    if (!audioResponse.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch audio file", code: "AUDIO_FETCH_FAILED" },
+        { status: 500 }
+      );
+    }
+
+    const audioBuffer = await audioResponse.arrayBuffer();
+    const contentType = audioResponse.headers.get("content-type") || "audio/mpeg";
+
+    // 6. Return the audio file with proper headers
+    return new NextResponse(audioBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Content-Disposition": `attachment; filename="audio-${audio.id}.mp3"`,
+        "Cache-Control": "public, max-age=3600",
+      },
     });
   } catch (error) {
     console.error("Error generating audio download URL:", error);
