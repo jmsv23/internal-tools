@@ -31,6 +31,22 @@ export const GEMINI_VOICES: GeminiVoice[] = [
     languages: [],
   },
   {
+    id: "algenib",
+    name: "Algenib",
+    geminiName: "Algenib",
+    gender: "male",
+    description: "Clear and engaging, great for educational content and informative narratives",
+    languages: [],
+  },
+  {
+    id: "charon",
+    name: "Charon",
+    geminiName: "Charon",
+    gender: "male",
+    description: "Clear and engaging, great for educational content and informative narratives",
+    languages: [],
+  },
+  {
     id: "luca",
     name: "Luca",
     geminiName: "Enceladus",
