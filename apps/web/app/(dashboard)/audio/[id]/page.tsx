@@ -20,10 +20,12 @@ export default async function AudioDetailPage({ params }: AudioDetailPageProps) 
     redirect("/login");
   }
 
+  const { id } = await params;
+
   // Get the audio and verify it belongs to the current user
   const audio = await db.audio.findFirst({
     where: {
-      id: params.id,
+      id,
       userId: session.user.id,
     },
   });

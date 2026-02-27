@@ -23,8 +23,10 @@ export default async function AudioListPage({ searchParams }: AudioListPageProps
     redirect("/login");
   }
 
-  const page = parseInt(searchParams.page || "1");
-  const limit = parseInt(searchParams.limit || ITEMS_PER_PAGE.toString());
+  const { page: pageParam, limit: limitParam } = await searchParams;
+
+  const page = parseInt(pageParam || "1");
+  const limit = parseInt(limitParam || ITEMS_PER_PAGE.toString());
   const offset = (page - 1) * limit;
 
   // Get user's audios with pagination
