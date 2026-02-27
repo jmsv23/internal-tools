@@ -22,7 +22,10 @@ export async function Header() {
               <>
                 <div className="flex items-center gap-4">
                   <Link href="/generate" className="text-sm hover:text-primary">
-                    Generate
+                    Generate Audio
+                  </Link>
+                  <Link href="/content" className="text-sm hover:text-primary">
+                    Generate Content
                   </Link>
                   <Link href="/audios" className="text-sm hover:text-primary">
                     My Audios

@@ -1,7 +1,7 @@
 // cspell:ignore gemini kore laomedeia enceladus fenrir
 import type { AudioLanguage } from "@/lib/audios/types";
 
-export type GeminiVoiceId = "lucia" | "laura" | "luca" | "robert";
+export type GeminiVoiceId = "lucia" | "laura" | "luca" | "robert" | "algenib" | "charon";
 
 export interface GeminiVoice {
   id: GeminiVoiceId;
