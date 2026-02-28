@@ -1,7 +1,7 @@
-const MAX_CHUNK_SIZE = 600;
+const MAX_CHUNK_SIZE = 800;
 
 /**
- * Split text into chunks suitable for TTS API (max 600 chars per request)
+ * Split text into chunks suitable for TTS API (max 800 chars per request)
  * Preserves sentence boundaries where possible
  */
 export function chunkTextForTTS(text: string): string[] {
