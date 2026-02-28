@@ -20,6 +20,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   audios       Audio[]
+  imageGenerations ImageGeneration[]
 
   // App-specific fields
   stripeCustomerId String? @unique
@@ -108,4 +109,30 @@ model Audio {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("audios")
+}
+
+// Image generation model for RunPod integration
+model ImageGeneration {
+  id                  String   @id @default(cuid())
+  userId              String
+  originalPrompt      String   // User's original prompt
+  finalPrompt         String   // Final prompt sent to API (after style processing)
+  styleName           String?  // Name of selected style (if any)
+  negativePrompt      String?
+  size                String   @default("1024*1024")
+  seed                Int      @default(-1)
+  imageUrl            String?  // URL of stored image in MinIO
+  originalImageUrl    String?  // Original URL from RunPod (expires in 7 days)
+  cost                Decimal? // Generation cost from RunPod
+  status              String   @default("processing") // processing, ready, failed
+  errorMessage        String?  // Error message if failed
+  generationTimeMs    Int?     // Time taken for generation
+  delayTimeMs         Int?     // Time spent in queue
+  workerId            String?  // RunPod worker ID
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("image_generations")
 }

@@ -36,3 +36,5 @@ packages/db/prisma/*.db-journal
 # Next.js
 apps/web/.next
 apps/web/out
+
+apps/web/tsconfig.tsbuildinfo

@@ -24,11 +24,17 @@ export async function Header() {
                   <Link href="/generate" className="text-sm hover:text-primary">
                     Generate Audio
                   </Link>
+                  <Link href="/generate-image" className="text-sm hover:text-primary">
+                    Generate Image
+                  </Link>
                   <Link href="/content" className="text-sm hover:text-primary">
                     Generate Content
                   </Link>
                   <Link href="/audios" className="text-sm hover:text-primary">
                     My Audios
+                  </Link>
+                  <Link href="/images" className="text-sm hover:text-primary">
+                    My Images
                   </Link>
                 </div>
                 <div className="flex items-center gap-4">
