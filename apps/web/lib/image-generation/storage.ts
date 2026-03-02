@@ -12,6 +12,7 @@ export interface ImageStorageInput {
   imageUrl: string;
   imageId: string;
   format?: string;
+  customPath?: string;
 }
 
 /**
@@ -22,6 +23,7 @@ export async function downloadAndStoreImage({
   imageUrl,
   imageId,
   format = "png",
+  customPath,
 }: ImageStorageInput): Promise<ImageStorageResult> {
   try {
     // Download image from RunPod URL
@@ -47,7 +49,7 @@ export async function downloadAndStoreImage({
     const buffer = Buffer.from(arrayBuffer);
 
     // Create object path for MinIO
-    const objectPath = `images/${imageId}.${format}`;
+    const objectPath = customPath || `images/${imageId}.${format}`;
 
     // Upload to MinIO
     try {
