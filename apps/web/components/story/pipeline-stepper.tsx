@@ -209,8 +209,10 @@ export default function PipelineStepper({
             content={chapter.fullContent || null}
             editable={chapter.contentStatus === "ready"}
             onSave={(content) => {
-              console.log("Saving content:", content);
               // TODO: Implement content save API
+              console.log("Saving content:", content);
+              // This would need to be implemented with a PUT/PATCH endpoint
+              // For now, keeping the placeholder as we don't have a content update API yet
             }}
           />
         )}
@@ -232,8 +234,10 @@ export default function PipelineStepper({
             prompts={chapter.imagePrompts || null}
             editable={chapter.imagePromptsStatus === "ready"}
             onSave={(prompts) => {
-              console.log("Saving image prompts:", prompts);
               // TODO: Implement image prompts save API
+              console.log("Saving image prompts:", prompts);
+              // This would need to be implemented with a PUT/PATCH endpoint
+              // For now, keeping the placeholder as we don't have an image prompts update API yet
             }}
           />
         )}
@@ -243,8 +247,15 @@ export default function PipelineStepper({
           <ImageGallery 
             images={chapter.images || []}
             onDownload={(image) => {
-              console.log("Downloading image:", image);
-              // TODO: Implement image download
+              if (image.imageUrl) {
+                // Create a temporary link to download the image
+                const link = document.createElement('a');
+                link.href = image.imageUrl;
+                link.download = `chapter-image-${image.imageNumber || image.id}.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }
             }}
           />
         )}

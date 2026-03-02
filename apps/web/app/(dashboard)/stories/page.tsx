@@ -1,3 +1,4 @@
+import { db } from "@repo/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -5,6 +6,20 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StoryCard from "@/components/story/story-card";
+
+interface Story {
+  id: string;
+  title: string;
+  idea: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  chapterCount: number;
+  completedSteps: number;
+  totalSteps: number;
+  progressPercentage: number;
+  chapters: any[];
+}
 
 export default async function StoriesListPage() {
   const session = await auth.api.getSession({
@@ -15,9 +30,28 @@ export default async function StoriesListPage() {
     redirect("/login");
   }
 
-  // TODO: Replace with actual data fetching once the API is implemented
-  // This is a placeholder implementation
-  const stories: any[] = [];
+  const stories = await db.story.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    }
+  });
+
+  // const response = await fetch("/api/stories", {
+  //   headers: {
+  //     'Cookie': (await headers()).get('cookie') || ''
+  //   }
+  // });
+  
+  // if (!response.ok) {
+  //   throw new Error("Failed to fetch stories");
+  // }
+  
+  // const data = await response.json();
+  // const stories = data.stories;
+  // const stories = [];
 
   return (
     <div className="container mx-auto py-8">
@@ -43,7 +77,7 @@ export default async function StoriesListPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {stories.map((story) => (
+          {stories.map((story: Story) => (
             <StoryCard key={story.id} story={story} />
           ))}
         </div>

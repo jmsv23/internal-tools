@@ -22,22 +22,20 @@ export default function NewStoryPage() {
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual API call once implemented
-      // const response = await fetch("/api/stories", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(formData),
-      // });
+      const response = await fetch("/api/stories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-      // if (response.ok) {
-      //   const story = await response.json();
-      //   router.push(`/stories/${story.id}`);
-      // }
-
-      // For now, just simulate success and redirect to stories list
-      setTimeout(() => {
-        router.push("/stories");
-      }, 1000);
+      if (response.ok) {
+        const story = await response.json();
+        router.push(`/stories/${story.id}`);
+      } else {
+        const error = await response.json();
+        console.error("Failed to create story:", error);
+        setIsSubmitting(false);
+      }
     } catch (error) {
       console.error("Failed to create story:", error);
       setIsSubmitting(false);

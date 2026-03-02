@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { storyId } = params;
+    const { storyId } = await params;
 
     // 2. Get story with full details
     const story = await db.story.findFirst({
@@ -112,9 +112,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 3. TODO: MinIO cleanup
-    // This will be implemented when we add storage functionality
-    // For now, we just delete from database
+    // 3. MinIO cleanup (placeholder for future implementation)
+    // When MinIO storage is implemented, this section should:
+    // - Get all associated file URLs from the database (images, audio, video files)
+    // - Delete each file from MinIO storage using the MinIO client
+    // - Handle any cleanup failures gracefully
+    // For now, we just delete from database since no files are stored yet
 
     // 4. Delete story (cascade delete will remove chapters and chapter images)
     await db.story.delete({

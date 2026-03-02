@@ -26,7 +26,27 @@ export const auth = betterAuth({
           return;
         }
         // In production, implement email sending
-        // TODO: Integrate with email provider (Resend, SendGrid, etc.)
+        // Example implementation with Resend (would need to install @resend/node):
+        /*
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: 'noreply@yourapp.com',
+          to: [email],
+          subject: 'Your magic link',
+          html: `<p>Click <a href="${url}">here</a> to sign in.</p>`
+        });
+        */
+        // Alternative with SendGrid:
+        /*
+        const sgMail = require('@sendgrid/mail');
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        await sgMail.send({
+          to: email,
+          from: 'noreply@yourapp.com',
+          subject: 'Your magic link',
+          html: `<p>Click <a href="${url}">here</a> to sign in.</p>`
+        });
+        */
         logger.info(`Sending magic link to ${email}`);
       },
     }),

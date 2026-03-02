@@ -91,89 +91,19 @@ export default function StoryDetailPage() {
     try {
       if (loading) setLoading(false); // Don't set loading true during polling
       
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/stories/${storyId}`);
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setStory(data);
-      //   
-      //   // Manage polling based on processing status
-      //   if (shouldPoll(data)) {
-      //     if (!pollingInterval) startPolling();
-      //   } else {
-      //     stopPolling();
-      //   }
-      // } else {
-      //   setError("Failed to load story");
-      // }
-      
-      // For now, use mock data
-      const mockStory = {
-        id: storyId,
-        title: "Mock Story",
-        idea: "This is a mock story for testing",
-        status: "ready",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        chapters: [
-          {
-            id: "chapter-1",
-            chapterNumber: 1,
-            title: "Chapter 1",
-            context: "Once upon a time...",
-            conflict: "A great challenge",
-            visualDescription: "Beautiful landscape",
-            climax: "The hero triumphs",
-            contentStatus: "ready",
-            audioStatus: "ready",
-            imagePromptsStatus: "ready",
-            imagesStatus: "ready",
-            videoStatus: "pending",
-            ttsContent: "Este es el contenido del capítulo 1 en español...",
-            cdtContent: JSON.stringify([{name: "Leo", description: "Un joven valiente"}]),
-            storyState: JSON.stringify({
-              worldState: ["Reino en paz"],
-              characterState: [{name: "Leo", emotionalState: "Valiente", internalShift: "Decide actuar"}],
-              lastEvent: "Leo descubre el problema",
-              openThreads: ["¿Podrá Leo superar el desafío?"]
-            }),
-            imagePrompts: JSON.stringify({
-              imagePrompts: [
-                {index: 0, timestamp: "00:00", duration: 5, prompt: "Landscape shot..."},
-                {index: 1, timestamp: "00:05", duration: 5, prompt: "Character intro..."}
-              ]
-            }),
-            audioUrl: "https://example.com/audio.mp3",
-            images: [
-              {id: "img-1", imageNumber: 0, prompt: "Landscape shot...", timestamp: "00:00", duration: 5, status: "ready", imageUrl: "https://example.com/image1.jpg"},
-              {id: "img-2", imageNumber: 1, prompt: "Character intro...", timestamp: "00:05", duration: 5, status: "ready", imageUrl: "https://example.com/image2.jpg"}
-            ]
-          },
-          {
-            id: "chapter-2", 
-            chapterNumber: 2,
-            title: "Chapter 2",
-            context: "The adventure continues...",
-            conflict: "New obstacles",
-            visualDescription: "Dark forest",
-            climax: "Revelation",
-            contentStatus: "pending",
-            audioStatus: "pending",
-            imagePromptsStatus: "pending",
-            imagesStatus: "pending", 
-            videoStatus: "pending",
-            images: []
-          }
-        ]
-      };
-      
-      setStory(mockStory);
-      
-      // Manage polling based on processing status
-      if (shouldPoll(mockStory)) {
-        if (!pollingInterval) startPolling();
+      const response = await fetch(`/api/stories/${storyId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setStory(data.story);
+        
+        // Manage polling based on processing status
+        if (shouldPoll(data.story)) {
+          if (!pollingInterval) startPolling();
+        } else {
+          stopPolling();
+        }
       } else {
-        stopPolling();
+        setError("Failed to load story");
       }
     } catch (err) {
       setError("Failed to load story");
@@ -190,17 +120,39 @@ export default function StoryDetailPage() {
   };
 
   const handleGenerateStep = async (chapterId: string, step: "content" | "audio" | "image-prompts" | "images" | "package") => {
-    // TODO: Implement step generation API calls
-    console.log(`Generating ${step} for chapter ${chapterId}`);
-    // After successful generation, refetch story
-    fetchStory();
+    try {
+      const response = await fetch(`/api/stories/${storyId}/chapters/${chapterId}/generate-${step}`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to generate ${step}`);
+      }
+      
+      // After successful generation, refetch story
+      fetchStory();
+    } catch (error) {
+      console.error(`Error generating ${step}:`, error);
+      // You could add error state handling here
+    }
   };
 
   const handleRunFullPipeline = async (chapterId: string) => {
-    // TODO: Implement full pipeline API call
-    console.log(`Running full pipeline for chapter ${chapterId}`);
-    // After successful completion, refetch story
-    fetchStory();
+    try {
+      const response = await fetch(`/api/stories/${storyId}/chapters/${chapterId}/run-full-pipeline`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to run full pipeline');
+      }
+      
+      // After successful completion, refetch story
+      fetchStory();
+    } catch (error) {
+      console.error('Error running full pipeline:', error);
+      // You could add error state handling here
+    }
   };
 
   if (loading) {
@@ -237,7 +189,7 @@ export default function StoryDetailPage() {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{story.title}</h1>
-            <p className="text-muted-foreground">Created: {story.createdAt.toLocaleDateString()}</p>
+            <p className="text-muted-foreground">Created: {''}</p>
           </div>
           <Button variant="outline" onClick={() => router.push("/stories")}>
             Back to Stories
@@ -259,13 +211,13 @@ export default function StoryDetailPage() {
           <ChapterAccordion
             key={chapter.id}
             chapter={chapter}
-            isExpanded={expandedChapters[chapter.id]}
+            isExpanded={!!expandedChapters[chapter.id]}
             onToggle={() => toggleChapter(chapter.id)}
           >
             <div className="p-4">
               <PipelineStepper
                 chapter={chapter}
-                onGenerateStep={(step) => handleGenerateStep(chapter.id, step)}
+                onGenerateStep={(step) => handleGenerateStep(chapter.id, step as "content" | "audio" | "image-prompts" | "images" | "package")}
                 onRunFullPipeline={() => handleRunFullPipeline(chapter.id)}
               />
             </div>
