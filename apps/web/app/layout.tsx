@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
+// Initialize BullMQ queue system
+import "@/lib/queue-init";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
