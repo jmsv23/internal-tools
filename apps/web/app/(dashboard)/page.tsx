@@ -97,6 +97,22 @@ export default async function DashboardPage() {
             </Link>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Story Pipeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Create stories with AI-generated content, audio, and images
+            </p>
+            <Link href="/stories">
+              <div className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 inline-block">
+                Manage Stories
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

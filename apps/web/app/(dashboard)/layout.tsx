@@ -56,6 +56,11 @@ export default async function AppLayout({ children }: AppLayoutProps) {
                 My Images
               </Button>
             </Link>
+            <Link href="/stories">
+              <Button variant="ghost">
+                Stories
+              </Button>
+            </Link>
           </nav>
         </div>
       </header>
