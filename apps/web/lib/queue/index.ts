@@ -47,7 +47,5 @@ export type {
   JobsOptions,
 } from './types';
 
-// Auto-initialize if this is not a test environment
-if (process.env.NODE_ENV !== 'test') {
-  initializeQueueSystem();
-}
+// Note: Workers should be explicitly started via the worker script
+// Auto-initialization removed to prevent issues in Next.js environment
