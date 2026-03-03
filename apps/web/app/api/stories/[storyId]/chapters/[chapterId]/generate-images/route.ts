@@ -82,6 +82,8 @@ export async function POST(
     let successCount = 0;
     let failureCount = 0;
 
+    const imagePromises = [];
+
     for (const image of imagesToGenerate) {
       try {
         // Update image status to processing
@@ -96,52 +98,9 @@ export async function POST(
           size: "1920*1080", // Fixed size for story images
         };
 
-        const result = await generateImage(generationInput);
-
-        if (result.status === "FAILED" || result.error) {
-          await (db as any).chapterImage.update({
-            where: { id: image.id },
-            data: {
-              status: "failed",
-              errorMessage: result.error || "Generation failed",
-            },
-          });
-          failureCount++;
-          continue;
-        }
-
-        // Download and store image in MinIO
-        let storedImageUrl = result.output?.result; // Default to original URL
-        if (result.output?.result) {
-          const storageResult = await downloadAndStoreImage({
-            imageUrl: result.output.result,
-            imageId: image.id,
-            format: "png",
-            customPath: `stories/${storyId}/images/${chapterId}/${image.imageNumber}.png`,
-          });
-
-          if (storageResult.success && storageResult.objectPath) {
-            storedImageUrl = `/api/images/${storageResult.objectPath}`;
-          }
-        }
-
-        // Update image record with success
-        await (db as any).chapterImage.update({
-          where: { id: image.id },
-          data: {
-            status: "ready",
-            imageUrl: storedImageUrl,
-            cost: result.output?.cost,
-            generationTimeMs: result.executionTime,
-            delayTimeMs: result.delayTime,
-            workerId: result.workerId,
-          },
-        });
-
-        successCount++;
+        imagePromises.push(generateImage(generationInput));
       } catch (error) {
-        console.error(`Error generating image ${image.id}:`, error);
-        
+        console.error(`Error preparing image generation for ${image.id}:`, error);
         await (db as any).chapterImage.update({
           where: { id: image.id },
           data: {
@@ -149,13 +108,74 @@ export async function POST(
             errorMessage: error instanceof Error ? error.message : "Unknown error",
           },
         });
-        
         failureCount++;
       }
     }
 
-    // 7. Update chapter status based on results
-    const finalImagesStatus = failureCount === 0 ? "ready" : "failed";
+    // Wait for all image generation promises to complete
+    try {
+      const results = await Promise.allSettled(imagePromises);
+      results.forEach(async (result, index) => {
+        const image = imagesToGenerate[index];
+        if (result.status === "fulfilled") {
+          const resultValue = result.value;
+          if (resultValue.status === "FAILED" || resultValue.error) {
+            await (db as any).chapterImage.update({
+              where: { id: image.id },
+              data: {
+                status: "failed",
+                errorMessage: resultValue.error || "Generation failed",
+              },
+            });
+            failureCount++;
+          } else {
+            // Download and store image in MinIO
+            let storedImageUrl = resultValue.output?.result; // Default to original URL
+            if (resultValue.output?.result) {
+              const storageResult = await downloadAndStoreImage({
+                imageUrl: resultValue.output.result,
+                imageId: image.id,
+                format: "png",
+                customPath: `stories/${storyId}/images/${chapterId}/${image.imageNumber}.png`,
+              });
+
+              if (storageResult.success && storageResult.objectPath) {
+                storedImageUrl = `/api/images/${storageResult.objectPath}`;
+              }
+            }
+
+            // Update image record with success
+            await (db as any).chapterImage.update({
+              where: { id: image.id },
+              data: {
+                status: "ready",
+                imageUrl: storedImageUrl,
+              },
+            });
+
+            successCount++;
+          }
+        }
+        if (result.status === "rejected") {
+          console.error(`Image generation promise rejected for image ${image.id}:`, result.reason);
+          await (db as any).chapterImage.update({
+            where: { id: image.id },
+            data: {
+              status: "failed",
+              errorMessage: result.reason instanceof Error ? result.reason.message : "Unknown error",
+            },
+          });
+          failureCount++;
+        }
+      });
+    } catch (error) {
+      await (db as any).chapter.update({
+        where: { id: chapterId },
+        data: { imagesStatus: "failed" },
+      });
+    }
+
+    const finalImagesStatus = 'ready';
     
     await (db as any).chapter.update({
       where: { id: chapterId },
