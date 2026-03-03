@@ -173,7 +173,8 @@ export async function buildChapterPackage(
 
       try {
         logger.info("Downloading chapter image", { storyId, chapterId, imageUrl: image.imageUrl });
-        const imageStream = await downloadStream(image.imageUrl);
+        const imagePath = `${image.imageUrl}`.replace('/api/images', '');
+        const imageStream = await downloadStream(imagePath);
         const imageBuffer = await streamToBuffer(imageStream);
         
         // Use imageNumber as filename (1.png, 2.png, etc.)

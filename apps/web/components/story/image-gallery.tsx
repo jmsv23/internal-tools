@@ -44,7 +44,7 @@ export default function ImageGallery({ images, onDownload }: ImageGalleryProps) 
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {images.map((image) => (
+          {images.sort((a, b) => a.imageNumber - b.imageNumber).map((image) => (
             <div key={image.id} className="border rounded-lg overflow-hidden">
               {image.imageUrl ? (
                 <div className="aspect-video bg-muted relative">
