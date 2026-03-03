@@ -13,7 +13,6 @@ export const REDIS_CONFIG = {
   retryDelay: 5000,
   retryOnFail: true,
   connectTimeout: 10000,
-  commandTimeout: 5000,
   reconnectOnError: (err: Error) => {
     const targetError = 'READONLY';
     if (err.message.includes(targetError)) {

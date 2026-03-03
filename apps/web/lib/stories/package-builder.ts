@@ -1,4 +1,4 @@
-import * as JSZip from "jszip";
+import JSZip from "jszip";
 import { logger } from "@repo/logger";
 import { downloadStream, uploadStream } from "@/lib/store/minio";
 
@@ -135,7 +135,7 @@ export async function buildChapterPackage(
     }
 
     // Create new ZIP file
-    const zip = new JSZip.default();
+    const zip = new JSZip();
 
     // 1. Generate and add slideshow config
     const slideshowConfig = buildSlideshowConfig(

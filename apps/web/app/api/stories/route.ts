@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         idea: body.idea,
         chapterSeed: JSON.stringify(chapterSeeds),
-        status: "processing",
+        status: "ready",
         chapters: {
           create: chapterSeeds.map((seed, index) => ({
             chapterNumber: index + 1,

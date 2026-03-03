@@ -38,7 +38,15 @@ export async function generateChapterPackageService({
       };
     }
 
-    // 2. Check if all prerequisites are ready
+    // 2. Check if package is already ready — return success so pipeline can continue
+    if (chapter.videoStatus === "ready") {
+      return {
+        success: true,
+        videoConfigUrl: chapter.videoConfigUrl ?? undefined,
+      };
+    }
+
+    // 3. Check if all prerequisites are ready
     if (chapter.imagesStatus !== "ready") {
       return {
         success: false,
@@ -53,13 +61,13 @@ export async function generateChapterPackageService({
       };
     }
 
-    // 3. Update chapter status to processing
+    // 4. Update chapter status to processing
     await db.chapter.update({
       where: { id: chapterId },
       data: { videoStatus: "processing" },
     });
 
-    // 4. Build the package
+    // 5. Build the package
     const packageResult = await buildChapterPackage({
       storyId,
       chapterId,
@@ -83,7 +91,7 @@ export async function generateChapterPackageService({
       };
     }
 
-    // 5. Update chapter with success
+    // 6. Update chapter with success
     await db.chapter.update({
       where: { id: chapterId },
       data: {

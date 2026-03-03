@@ -42,11 +42,11 @@ export async function generateChapterAudioService({
       };
     }
 
-    // 3. Check if audio is already ready
+    // 3. Check if audio is already ready — return success so pipeline can continue
     if (chapter.audioStatus === "ready") {
       return {
-        success: false,
-        error: "Audio already generated",
+        success: true,
+        audioUrl: chapter.audioUrl ?? undefined,
       };
     }
 

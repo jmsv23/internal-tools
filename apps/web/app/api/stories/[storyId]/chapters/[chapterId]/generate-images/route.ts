@@ -22,7 +22,7 @@ export async function POST(
       );
     }
 
-    const { storyId, chapterId } = params;
+    const { storyId, chapterId } = await params;
 
     // 2. Verify chapter exists and belongs to user
     const chapter = await (db as any).chapter.findFirst({

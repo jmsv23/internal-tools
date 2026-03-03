@@ -41,7 +41,18 @@ export async function generateChapterImagesService({
       };
     }
 
-    // 2. Check if image prompts are ready
+    // 2. Check if images are already all ready — return success so pipeline can continue
+    if (chapter.imagesStatus === "ready") {
+      return {
+        success: true,
+        successCount: chapter.images.length,
+        failureCount: 0,
+        totalProcessed: 0,
+        imagesStatus: "ready",
+      };
+    }
+
+    // 3. Check if image prompts are ready
     if (chapter.imagePromptsStatus !== "ready") {
       return {
         success: false,
@@ -49,7 +60,7 @@ export async function generateChapterImagesService({
       };
     }
 
-    // 3. Get pending or failed images to generate
+    // 4. Get pending or failed images to generate
     const imagesToGenerate = chapter.images.filter(
       (img: any) => img.status === "pending" || img.status === "failed"
     );
@@ -61,13 +72,13 @@ export async function generateChapterImagesService({
       };
     }
 
-    // 4. Update chapter status to processing
+    // 5. Update chapter status to processing
     await db.chapter.update({
       where: { id: chapterId },
       data: { imagesStatus: "processing" },
     });
 
-    // 5. Process images sequentially
+    // 6. Process images sequentially
     let successCount = 0;
     let failureCount = 0;
 
@@ -110,7 +121,8 @@ export async function generateChapterImagesService({
           });
 
           if (storageResult.success && storageResult.objectPath) {
-            storedImageUrl = `/api/images/${storageResult.objectPath}`;
+            // Store the raw MinIO object path so the package builder can download it
+            storedImageUrl = storageResult.objectPath;
           }
         }
 
@@ -120,10 +132,6 @@ export async function generateChapterImagesService({
           data: {
             status: "ready",
             imageUrl: storedImageUrl,
-            cost: result.output?.cost,
-            generationTimeMs: result.executionTime,
-            delayTimeMs: result.delayTime,
-            workerId: result.workerId,
           },
         });
 
@@ -143,7 +151,7 @@ export async function generateChapterImagesService({
       }
     }
 
-    // 6. Update chapter status based on results
+    // 7. Update chapter status based on results
     const finalImagesStatus = failureCount === 0 ? "ready" : "failed";
     
     await db.chapter.update({
@@ -159,7 +167,7 @@ export async function generateChapterImagesService({
       totalProcessed: imagesToGenerate.length 
     });
 
-    // 7. Return the result
+    // 8. Return the result
     return {
       success: true,
       successCount,

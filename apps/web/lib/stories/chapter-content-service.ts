@@ -83,12 +83,6 @@ export async function generateChapterContentService({
       where: { id: chapterId },
       include: {
         story: true,
-        // Get previous chapter for story state continuity
-        previousChapter: {
-          where: { chapterNumber: { lt: 1 } }, // Only get chapter 0 if exists
-          orderBy: { chapterNumber: 'desc' },
-          take: 1,
-        },
       },
     });
 
@@ -99,11 +93,20 @@ export async function generateChapterContentService({
       };
     }
 
-    // 2. Check if content is already ready
+    // Get previous chapter for story state continuity
+    const previousChapter = chapter.chapterNumber > 1
+      ? await db.chapter.findFirst({
+          where: {
+            storyId: chapter.storyId,
+            chapterNumber: chapter.chapterNumber - 1,
+          },
+        })
+      : null;
+
+    // 2. Check if content is already ready — return success so pipeline can continue
     if (chapter.contentStatus === "ready") {
       return {
-        success: false,
-        error: "Chapter content already generated",
+        success: true,
       };
     }
 
@@ -136,7 +139,7 @@ export async function generateChapterContentService({
     }
 
     // 6. Build the user prompt with chapter seed data
-    const userPrompt = buildChapterPrompt(chapter);
+    const userPrompt = buildChapterPrompt(chapter, previousChapter);
 
     // 7. Generate content using Gemini with JSON schema
     const response = await getGemini().models.generateContent({
@@ -234,12 +237,12 @@ export async function generateChapterContentService({
   }
 }
 
-function buildChapterPrompt(chapter: any): string {
+function buildChapterPrompt(chapter: any, previousChapter: any): string {
   // Extract previous chapter story state if available
   let previousStoryState = "";
-  if (chapter.previousChapter && chapter.previousChapter.storyState) {
+  if (previousChapter?.storyState) {
     try {
-      const storyState = JSON.parse(chapter.previousChapter.storyState);
+      const storyState = JSON.parse(previousChapter.storyState);
       previousStoryState = `Previous Chapter Story State:\n` +
         `World State: ${storyState.worldState.join(', ')}\n` +
         `Last Event: ${storyState.lastEvent}\n` +

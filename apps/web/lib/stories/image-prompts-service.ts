@@ -42,11 +42,10 @@ export async function generateImagePromptsService({
       };
     }
 
-    // 3. Check if image prompts are already ready
+    // 3. Check if image prompts are already ready — return success so pipeline can continue
     if (chapter.imagePromptsStatus === "ready") {
       return {
-        success: false,
-        error: "Image prompts already generated",
+        success: true,
       };
     }
 
