@@ -1,5 +1,6 @@
 import { logger } from "@repo/logger";
 import { generateImagePrompts } from "@/lib/stories/media-analysis";
+import { downloadStream } from "@/lib/store/minio";
 import type { ImagePrompts } from "./types";
 
 export interface GenerateImagePromptsInput {
@@ -34,11 +35,18 @@ export async function generateImagePromptsService({
       };
     }
 
-    // 2. Check if audio is ready (audio timing needed as reference)
+    // 2. Check if audio is ready and URL is available
     if (chapter.audioStatus !== "ready") {
       return {
         success: false,
         error: "Chapter audio must be generated first",
+      };
+    }
+
+    if (!chapter.audioUrl) {
+      return {
+        success: false,
+        error: "Chapter audio URL is missing",
       };
     }
 
@@ -70,13 +78,38 @@ export async function generateImagePromptsService({
       data: { imagePromptsStatus: "processing" },
     });
 
-    // 6. Parse chapter content and generate image prompts
+    // 6. Download audio from MinIO and convert to base64
+    let audioBase64: string;
+    let audioMimeType: string;
+    try {
+      const audioStream = await downloadStream(chapter.audioUrl);
+      const chunks: Buffer[] = [];
+      for await (const chunk of audioStream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      audioBase64 = Buffer.concat(chunks).toString("base64");
+      audioMimeType = chapter.audioUrl.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+    } catch (error) {
+      logger.error("Failed to download chapter audio from MinIO", { error });
+
+      await db.chapter.update({
+        where: { id: chapterId },
+        data: { imagePromptsStatus: "failed" },
+      });
+
+      return {
+        success: false,
+        error: "Failed to download chapter audio for analysis",
+      };
+    }
+
+    // 7. Parse chapter content and generate image prompts
     let chapterContent;
     try {
       chapterContent = JSON.parse(chapter.fullContent);
     } catch (error) {
       logger.error("Failed to parse chapter full content", { error });
-      
+
       // Update status to failed
       await db.chapter.update({
         where: { id: chapterId },
@@ -95,12 +128,12 @@ export async function generateImagePromptsService({
       ...chapterContent,
     };
 
-    const imagePromptsResult = await generateImagePrompts(mediaAnalysisInput);
+    const imagePromptsResult = await generateImagePrompts(mediaAnalysisInput, audioBase64, audioMimeType);
 
-    // 7. Store JSON string in chapter.imagePrompts
+    // 8. Store JSON string in chapter.imagePrompts
     const imagePromptsJson = JSON.stringify(imagePromptsResult);
 
-    // 8. Create ChapterImage records for each prompt entry
+    // 9. Create ChapterImage records for each prompt entry
     const chapterImagesData = imagePromptsResult.imagePrompts.map((prompt) => ({
       chapterId: chapterId,
       imageNumber: prompt.index,
@@ -110,7 +143,7 @@ export async function generateImagePromptsService({
       status: "pending" as const,
     }));
 
-    // 9. Update chapter and create ChapterImage records in a transaction
+    // 10. Update chapter and create ChapterImage records in a transaction
     await db.$transaction([
       db.chapter.update({
         where: { id: chapterId },

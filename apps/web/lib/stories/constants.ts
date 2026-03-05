@@ -29,8 +29,8 @@ export const CHAPTER_SEED_DEFAULT_COUNT = 5;
 
 export const IMAGE_GENERATION_SIZE = "1920*1080";
 
-export const IMAGE_PROMPT_MIN_COUNT = 10;
-export const IMAGE_PROMPT_MAX_COUNT = 15;
+export const IMAGE_PROMPT_MIN_COUNT = 6;
+export const IMAGE_PROMPT_MAX_COUNT = 10;
 
 export const ESTIMATED_WORDS_PER_MINUTE = 150;
 

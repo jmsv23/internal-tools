@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@repo/db";
 import { generateImagePrompts } from "@/lib/stories/media-analysis";
+import { downloadStream } from "@/lib/store/minio";
 
 interface RouteParams {
   params: {
@@ -44,12 +45,22 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // 3. Check if audio is ready (audio timing needed as reference)
+    // 3. Check if audio is ready and URL is available
     if (chapter.audioStatus !== "ready") {
       return NextResponse.json(
-        { 
-          error: "Chapter audio must be generated first", 
-          code: "AUDIO_NOT_READY" 
+        {
+          error: "Chapter audio must be generated first",
+          code: "AUDIO_NOT_READY"
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!chapter.audioUrl) {
+      return NextResponse.json(
+        {
+          error: "Chapter audio URL is missing",
+          code: "AUDIO_URL_MISSING"
         },
         { status: 400 }
       );
@@ -93,25 +104,52 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       data: { imagePromptsStatus: "processing" },
     });
 
-    // 7. Parse chapter content and generate image prompts
+    // 7. Download audio from MinIO and convert to base64
+    let audioBase64: string;
+    let audioMimeType: string;
+    try {
+      const audioStream = await downloadStream(chapter.audioUrl);
+      const chunks: Buffer[] = [];
+      for await (const chunk of audioStream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      audioBase64 = Buffer.concat(chunks).toString("base64");
+      audioMimeType = chapter.audioUrl.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
+    } catch (error) {
+      console.error("Failed to download chapter audio from MinIO:", error);
+
+      await db.chapter.update({
+        where: { id: chapterId },
+        data: { imagePromptsStatus: "failed" },
+      });
+
+      return NextResponse.json(
+        {
+          error: "Failed to download chapter audio for analysis",
+          code: "AUDIO_FETCH_FAILED"
+        },
+        { status: 500 }
+      );
+    }
+
+    // 8. Parse chapter content and generate image prompts
     let chapterContent;
     try {
       chapterContent = JSON.parse(chapter.fullContent);
     } catch (error) {
       console.error("Failed to parse chapter full content:", error);
-      
-      // Update status to failed
+
       await db.chapter.update({
         where: { id: chapterId },
-        data: { 
+        data: {
           imagePromptsStatus: "failed",
         },
       });
 
       return NextResponse.json(
-        { 
-          error: "Invalid chapter content format", 
-          code: "INVALID_CONTENT_FORMAT" 
+        {
+          error: "Invalid chapter content format",
+          code: "INVALID_CONTENT_FORMAT"
         },
         { status: 400 }
       );
@@ -123,12 +161,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       ...chapterContent,
     };
 
-    const imagePromptsResult = await generateImagePrompts(mediaAnalysisInput);
+    const imagePromptsResult = await generateImagePrompts(mediaAnalysisInput, audioBase64, audioMimeType);
 
-    // 8. Store JSON string in chapter.imagePrompts
+    // 9. Store JSON string in chapter.imagePrompts
     const imagePromptsJson = JSON.stringify(imagePromptsResult);
 
-    // 9. Create ChapterImage records for each prompt entry
+    // 10. Create ChapterImage records for each prompt entry
     const chapterImagesData = imagePromptsResult.imagePrompts.map((prompt) => ({
       chapterId: chapterId,
       imageNumber: prompt.index,
@@ -138,7 +176,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       status: "pending" as const,
     }));
 
-    // 10. Update chapter and create ChapterImage records in a transaction
+    // 11. Update chapter and create ChapterImage records in a transaction
     const [updatedChapter] = await db.$transaction([
       db.chapter.update({
         where: { id: chapterId },
@@ -152,7 +190,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }),
     ]);
 
-    // 11. Return success response
+    // 12. Return success response
     return NextResponse.json({
       success: true,
       imagePrompts: imagePromptsResult,

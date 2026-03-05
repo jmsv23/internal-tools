@@ -32,4 +32,8 @@ export const GENERATION_CONFIG = {
     temperature: 0.8,
     maxOutputTokens: 8192,
   },
+  mediaAnalysis: {
+    temperature: 0.8,
+    maxOutputTokens: 65536,
+  },
 } as const;

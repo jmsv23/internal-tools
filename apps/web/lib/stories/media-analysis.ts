@@ -1,6 +1,6 @@
 import { Type } from "@google/genai";
 import { getGemini, GEMINI_MODELS, GENERATION_CONFIG } from "@/lib/gemini/client";
-import { IMAGE_PROMPT_MIN_COUNT, IMAGE_PROMPT_MAX_COUNT, ESTIMATED_WORDS_PER_MINUTE, IMAGE_STYLE_ANCHOR } from "./constants";
+import { IMAGE_PROMPT_MIN_COUNT, IMAGE_PROMPT_MAX_COUNT, IMAGE_STYLE_ANCHOR } from "./constants";
 import type { ChapterContent, ImagePrompts } from "./types";
 
 const IMAGE_PROMPTS_SCHEMA = {
@@ -23,13 +23,19 @@ const IMAGE_PROMPTS_SCHEMA = {
   required: ["imagePrompts"],
 } as const;
 
-export async function generateImagePrompts(chapterContent: ChapterContent): Promise<ImagePrompts> {
+export async function generateImagePrompts(
+  chapterContent: ChapterContent,
+  audioBase64: string,
+  audioMimeType: string,
+): Promise<ImagePrompts> {
   const userContent = `
-Chapter Content (TTS-ready for timing):
-${chapterContent.ttsContent}
+The audio file above is the generated chapter narration. Use it as the PRIMARY reference to determine the exact total duration and precise timing of each image prompt.
 
-Full Chapter Content (including scenes):
+Chapter Scenes (for narrative context and visual reference only):
 ${JSON.stringify(chapterContent.scenes, null, 2)}
+
+TTS Script (for scene/dialogue reference only — timing is derived from the audio):
+${chapterContent.ttsContent}
 
 Story State:
 ${JSON.stringify(chapterContent.storyState, null, 2)}
@@ -39,11 +45,10 @@ ${chapterContent.cdt ? JSON.stringify(chapterContent.cdt, null, 2) : "None"}
 
 ---
 Analysis Requirements:
-- Generate between ${IMAGE_PROMPT_MIN_COUNT} and ${IMAGE_PROMPT_MAX_COUNT} image prompts
-- Calculate timing based on ${ESTIMATED_WORDS_PER_MINUTE} words per minute reading speed
+- Listen to the audio to determine the exact total duration
+- Generate between ${IMAGE_PROMPT_MIN_COUNT} and ${IMAGE_PROMPT_MAX_COUNT} image prompts per minute of audio, distributed across the full duration
 - Each prompt MUST include the style anchor: "${IMAGE_STYLE_ANCHOR}"
-- Distribute prompts throughout the entire chapter narrative
-- Focus on key visual moments and emotional beats
+- Image prompts should capture key visual moments, emotional beats, and narrative highlights in sequential order, evenly distributed — do not cluster at the beginning
 - Vary shot compositions and angles
 - Ensure no clear faces as specified in style
 `.trim();
@@ -51,7 +56,15 @@ Analysis Requirements:
   try {
     const response = await getGemini().models.generateContent({
       model: GEMINI_MODELS.flash,
-      contents: userContent,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: audioMimeType, data: audioBase64 } },
+            { text: userContent },
+          ],
+        },
+      ],
       config: {
         systemInstruction: `# 🎬 MEDIA ANALYSIS – GENERADOR DE PROMPTS DE IMAGEN
 
@@ -59,29 +72,30 @@ Analysis Requirements:
 
 Eres un director de fotografía y experto en análisis de contenido visual especializado en narrativa cinematográfica.
 
-Tu tarea es analizar el contenido de un capítulo y generar prompts de imagen optimizados para la generación de imágenes IA.
+Tu tarea es escuchar el audio de narración del capítulo y generar prompts de imagen optimizados para la generación de imágenes IA sincronizados con el audio.
 
 ---
 
-## 📋 ANÁLISIS DE CONTENIDO
+## 🎧 FUENTE DE VERDAD: EL AUDIO
 
-Analizarás el contenido completo del capítulo incluyendo:
+El archivo de audio proporcionado ES la narración final del capítulo. Es tu fuente principal y autoritativa para:
+- Determinar la duración EXACTA total del capítulo
+- Calcular los timestamps precisos de cada imagen
+- Percibir el ritmo narrativo, pausas, y momentos de tensión emocional
 
-- **Narrativa completa**: Escenas, diálogos y progresión dramática
-- **Contenido TTS**: Versión limpia para audio, útil para calcular tiempos
-- **Descripciones visuales**: Elementos de escena, personajes y atmósfera
+El contenido textual (escenas, TTS, estado de la historia) es únicamente REFERENCIA de contexto visual y narrativo. Los tiempos deben derivarse del audio, no del texto.
 
 ---
 
 ## 🎯 GENERACIÓN DE PROMPTS
 
-Debes generar ${IMAGE_PROMPT_MIN_COUNT}-${IMAGE_PROMPT_MAX_COUNT} prompts de imagen con las siguientes características:
+Debes generar ${IMAGE_PROMPT_MIN_COUNT}-${IMAGE_PROMPT_MAX_COUNT} prompts de imagen por minuto de audio con las siguientes características:
 
-### **Cantidad exacta**: Entre ${IMAGE_PROMPT_MIN_COUNT} y ${IMAGE_PROMPT_MAX_COUNT} prompts
-### **Distribución temporal**: 
-- Calcular duración estimada basada en ${ESTIMATED_WORDS_PER_MINUTE} palabras por minuto
-- Distribuir prompts a lo largo del capítulo para cubrir momentos clave
-- Cada prompt debe tener su timestamp en formato MM:SS
+### **Cantidad exacta**: Entre ${IMAGE_PROMPT_MIN_COUNT} y ${IMAGE_PROMPT_MAX_COUNT} prompts por minuto de audio
+### **Distribución temporal**:
+- Escuchar el audio para determinar la duración real total
+- Distribuir prompts a lo largo del capítulo de manera secuencial, evitando concentrarlos solo al inicio
+- Cada prompt debe tener su timestamp en formato MM:SS alineado con lo que ocurre en el audio
 
 ### **Contenido de cada prompt**:
 - **Descripción visual clara**: Personajes, acciones, entorno, iluminación
@@ -90,8 +104,8 @@ Debes generar ${IMAGE_PROMPT_MIN_COUNT}-${IMAGE_PROMPT_MAX_COUNT} prompts de ima
 - **Detalles específicos**: Elementos que representen el momento clave de la escena
 
 ### **Duración por imagen**:
-- Calcular duración en segundos basada en la extensión narrativa cubierta
-- Valores típicos: 3-8 segundos por imagen
+- Calcular duración en segundos basada en la extensión narrativa cubierta en el audio
+- Valores típicos: 6 a 10 segundos por imagen
 - Momentos climáticos pueden tener mayor duración
 
 ---
@@ -115,11 +129,12 @@ Debes generar ${IMAGE_PROMPT_MIN_COUNT}-${IMAGE_PROMPT_MAX_COUNT} prompts de ima
 
 ## 🔁 REGLAS ESENCIALES
 
-1. **ANCLAR ESTILO**: CADA prompt debe incluir EXACTAMENTE el estilo base completo
-2. **NO CARAS**: El estilo especifica "No clear faces" – respetar esta directiva
-3. **DISTRIBUCIÓN**: Los prompts deben cubrir todo el capítulo, no concentrarse solo en el inicio
-4. **ORIGINALIDAD**: Cada prompt debe describir una escena visual única
-5. **CONTEXTUAL**: Los prompts deben ser coherentes con la narrativa analizada
+1. **AUDIO PRIMERO**: Los timestamps deben reflejar lo que ocurre en el audio, no estimaciones de texto
+2. **ANCLAR ESTILO**: CADA prompt debe incluir EXACTAMENTE el estilo base completo
+3. **NO CARAS**: El estilo especifica "No clear faces" – respetar esta directiva
+4. **DISTRIBUCIÓN**: Los prompts deben cubrir todo el capítulo, no concentrarse solo en el inicio
+5. **ORIGINALIDAD**: Cada prompt debe describir una escena visual única
+6. **CONTEXTUAL**: Los prompts deben ser coherentes con la narrativa analizada
 
 ---
 
@@ -134,8 +149,8 @@ Estructura de cada entrada:
 - prompt: descripción completa incluyendo el estilo anclado
 
 No incluir texto adicional, explicaciones o formato markdown.`,
-        temperature: GENERATION_CONFIG.storyGeneration.temperature,
-        maxOutputTokens: GENERATION_CONFIG.storyGeneration.maxOutputTokens,
+        temperature: GENERATION_CONFIG.mediaAnalysis.temperature,
+        maxOutputTokens: GENERATION_CONFIG.mediaAnalysis.maxOutputTokens,
         responseMimeType: "application/json",
         responseSchema: IMAGE_PROMPTS_SCHEMA,
       },
