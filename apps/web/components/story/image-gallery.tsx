@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Image as ImageIcon, Download, Eye } from "lucide-react";
+import { Image as ImageIcon, Download, Eye, RefreshCw } from "lucide-react";
 
 interface ChapterImage {
   id: string;
@@ -14,16 +15,37 @@ interface ChapterImage {
 
 interface ImageGalleryProps {
   images: ChapterImage[];
+  storyId: string;
+  chapterId: string;
   onDownload?: (image: ChapterImage) => void;
+  onRetrySuccess?: (imageId: string, updatedImage: ChapterImage) => void;
 }
 
-export default function ImageGallery({ images, onDownload }: ImageGalleryProps) {
+export default function ImageGallery({ images, storyId, chapterId, onDownload, onRetrySuccess }: ImageGalleryProps) {
+  const [retrying, setRetrying] = useState<Record<string, boolean>>({});
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ready": return "text-green-600";
       case "processing": return "text-yellow-600";
       case "failed": return "text-red-600";
       default: return "text-gray-500";
+    }
+  };
+
+  const handleRetry = async (image: ChapterImage) => {
+    setRetrying((prev) => ({ ...prev, [image.id]: true }));
+    try {
+      const res = await fetch(
+        `/api/stories/${storyId}/chapters/${chapterId}/images/${image.id}/generate`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (res.ok && data.success) {
+        onRetrySuccess?.(image.id, data.image);
+      }
+    } finally {
+      setRetrying((prev) => ({ ...prev, [image.id]: false }));
     }
   };
 
@@ -77,6 +99,18 @@ export default function ImageGallery({ images, onDownload }: ImageGalleryProps) 
                   {image.prompt}
                 </p>
                 
+                {image.status === "failed" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full"
+                    disabled={retrying[image.id]}
+                    onClick={() => handleRetry(image)}
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-1 ${retrying[image.id] ? "animate-spin" : ""}`} />
+                    {retrying[image.id] ? "Retrying..." : "Retry"}
+                  </Button>
+                )}
                 {image.imageUrl && (
                   <div className="flex gap-1">
                     <Button size="sm" variant="outline" className="flex-1">
@@ -84,8 +118,8 @@ export default function ImageGallery({ images, onDownload }: ImageGalleryProps) 
                       View
                     </Button>
                     {onDownload && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => onDownload(image)}
                       >

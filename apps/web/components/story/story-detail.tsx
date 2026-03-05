@@ -163,6 +163,7 @@ export default function StoryDetailPage({ story }: { story: Story }) {
             <div className="p-4">
               <PipelineStepper
                 chapter={chapter}
+                storyId={storyId}
                 onGenerateStep={(step) =>
                   handleGenerateStep(
                     chapter.id,

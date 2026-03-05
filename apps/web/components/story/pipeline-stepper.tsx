@@ -42,14 +42,16 @@ interface PipelineStep {
 
 interface PipelineStepperProps {
   chapter: Chapter;
+  storyId: string;
   onGenerateStep: (step: string) => void;
   onRunFullPipeline: () => void;
 }
 
-export default function PipelineStepper({ 
-  chapter, 
-  onGenerateStep, 
-  onRunFullPipeline 
+export default function PipelineStepper({
+  chapter,
+  storyId,
+  onGenerateStep,
+  onRunFullPipeline
 }: PipelineStepperProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -244,8 +246,10 @@ export default function PipelineStepper({
 
         {/* Image Gallery */}
         {(chapter.imagesStatus === "ready" || chapter.imagesStatus === "processing") && (
-          <ImageGallery 
+          <ImageGallery
             images={chapter.images || []}
+            storyId={storyId}
+            chapterId={chapter.id}
             onDownload={(image) => {
               if (image.imageUrl) {
                 // Create a temporary link to download the image

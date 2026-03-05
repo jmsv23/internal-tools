@@ -3,7 +3,11 @@ import { logger } from "@repo/logger";
 import { downloadStream, uploadStream } from "@/lib/store/minio";
 
 export interface SlideshowConfig {
-  resolution: string;
+  output_file: string;
+  resolution: {
+    width: number;
+    height: number;
+  };
   fps: number;
   quality: string;
   hardware_accel: string;
@@ -18,8 +22,15 @@ export interface SlideshowConfig {
 }
 
 export interface TimelineEntry {
-  file: string;
+  type: string;
+  source: string;
   duration: number;
+  scale: string;
+  ken_burns?: {
+    zoom_from: number;
+    zoom_to: number;
+    direction: string;
+  };
   transition?: {
     type: string;
     duration: number;
@@ -66,27 +77,55 @@ export function buildSlideshowConfig(
 
   const transitionTypes = ["crossfade", "wipe_left", "slide_up", "fade_out"];
   
-  const timeline: TimelineEntry[] = sortedImages.map((image, index) => {
+  const timeline: TimelineEntry[] = [];
+  sortedImages.forEach((image) => {
+    const kenBurnsTime = Math.floor((image.duration || 10) * .45); // Convert to milliseconds
     const entry: TimelineEntry = {
-      file: `images/${image.imageNumber}.png`,
-      duration: image.duration || 3, // Default 3 seconds if not specified
+      type: "image",
+      source: `images/${image.imageNumber}.png`,
+      duration: (image.duration || 10) - kenBurnsTime, // Default 10 seconds if not specified
+      scale: "fit",
     };
-    
-    if (index < sortedImages.length - 1) {
-      const transitionType = transitionTypes[index % transitionTypes.length];
-      if (transitionType) {
-        entry.transition = {
-          type: transitionType,
-          duration: 0.5, // 0.5 second transitions
-        };
+
+    timeline.push(entry);
+
+    const entryKenburns: TimelineEntry = {
+      type: "image",
+      source: `images/${image.imageNumber}.png`,
+      duration: kenBurnsTime, // Default 10 seconds if not specified
+      scale: "fit",
+      ken_burns: {
+        zoom_from: 1.0,
+        zoom_to: 1.1,
+        direction: "center"
+      },
+      transition: {
+        type: transitionTypes[0] || "crossfade", // Use first transition type for all entries
+        duration: 0.5, // 0.5 second transitions
       }
-    }
+    };
+
+    timeline.push(entryKenburns);
     
-    return entry;
+    // if (index < sortedImages.length - 1) {
+    //   const transitionType = transitionTypes[index % transitionTypes.length];
+    //   if (transitionType) {
+    //     entry.transition = {
+    //       type: transitionType,
+    //       duration: 0.5, // 0.5 second transitions
+    //     };
+    //   }
+    // }
+    
+    // return entry;
   });
 
   return {
-    resolution: "1920x1080",
+    output_file: "chapter.mp4",
+    resolution: {
+      width: 1920,
+      height: 1080
+    },
     fps: 30,
     quality: "low",
     hardware_accel: "h264_nvenc",
@@ -94,8 +133,8 @@ export function buildSlideshowConfig(
       file: chapterAudioUrl,
       volume: 1.0,
       loop: false,
-      fade_in: 2,
-      fade_out: 3,
+      fade_in: 0,
+      fade_out: 0,
     },
     timeline,
   };
