@@ -36,6 +36,9 @@ export async function Header() {
                   <Link href="/images" className="text-sm hover:text-primary">
                     My Images
                   </Link>
+                  <Link href="/stories" className="text-sm hover:text-primary">
+                    Stories
+                  </Link>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground">

@@ -115,7 +115,7 @@ export async function POST(
     // Wait for all image generation promises to complete
     try {
       const results = await Promise.allSettled(imagePromises);
-      results.forEach(async (result, index) => {
+      await Promise.all(results.map(async (result, index) => {
         const image = imagesToGenerate[index];
         if (result.status === "fulfilled") {
           const resultValue = result.value;
@@ -130,7 +130,7 @@ export async function POST(
             failureCount++;
           } else {
             // Download and store image in MinIO
-            let storedImageUrl = resultValue.output?.result; // Default to original URL
+            let storedImageUrl: string | null = null;
             if (resultValue.output?.result) {
               const storageResult = await downloadAndStoreImage({
                 imageUrl: resultValue.output.result,
@@ -144,16 +144,25 @@ export async function POST(
               }
             }
 
-            // Update image record with success
-            await (db as any).chapterImage.update({
-              where: { id: image.id },
-              data: {
-                status: "ready",
-                imageUrl: storedImageUrl,
-              },
-            });
-
-            successCount++;
+            if (storedImageUrl) {
+              await (db as any).chapterImage.update({
+                where: { id: image.id },
+                data: {
+                  status: "ready",
+                  imageUrl: storedImageUrl,
+                },
+              });
+              successCount++;
+            } else {
+              await (db as any).chapterImage.update({
+                where: { id: image.id },
+                data: {
+                  status: "failed",
+                  errorMessage: `Failed to store image in MinIO ${resultValue?.output?.result ? `after generation: ${resultValue.output.result}` : "after generation, no output URL"}`,
+                },
+              });
+              failureCount++;
+            }
           }
         }
         if (result.status === "rejected") {
@@ -167,7 +176,7 @@ export async function POST(
           });
           failureCount++;
         }
-      });
+      }));
     } catch (error) {
       await (db as any).chapter.update({
         where: { id: chapterId },

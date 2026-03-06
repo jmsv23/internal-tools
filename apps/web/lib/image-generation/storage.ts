@@ -13,6 +13,8 @@ export interface ImageStorageInput {
   imageId: string;
   format?: string;
   customPath?: string;
+  downloadRetries?: number;
+  downloadRetryDelayMs?: number;
 }
 
 /**
@@ -24,22 +26,49 @@ export async function downloadAndStoreImage({
   imageId,
   format = "png",
   customPath,
+  downloadRetries = 3,
+  downloadRetryDelayMs = 3000,
 }: ImageStorageInput): Promise<ImageStorageResult> {
   try {
-    // Download image from RunPod URL
-    const response = await fetch(imageUrl);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error("Failed to download image from RunPod", {
-        status: response.status,
-        errorText,
+    // Download image from RunPod URL with retry logic
+    // The image URL may not be immediately available after generation
+    let response: Response | null = null;
+    let lastError: string = "";
+
+    for (let attempt = 0; attempt <= downloadRetries; attempt++) {
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, downloadRetryDelayMs));
+      }
+
+      try {
+        response = await fetch(imageUrl);
+        if (response.ok) break;
+
+        lastError = `${response.status} ${response.statusText}`;
+        logger.warn("Failed to download image from RunPod, retrying", {
+          attempt,
+          status: response.status,
+          imageUrl,
+        });
+      } catch (fetchError) {
+        lastError = fetchError instanceof Error ? fetchError.message : "Network error";
+        logger.warn("Fetch error downloading image from RunPod, retrying", {
+          attempt,
+          error: lastError,
+          imageUrl,
+        });
+      }
+    }
+
+    if (!response?.ok) {
+      logger.error("Failed to download image from RunPod after all retries", {
+        retries: downloadRetries,
+        lastError,
         imageUrl,
       });
-      
       return {
         success: false,
-        error: `Failed to download image: ${response.status} ${response.statusText}`,
+        error: `Failed to download image after ${downloadRetries} retries: ${lastError}`,
         errorCode: "DOWNLOAD_FAILED",
       };
     }
