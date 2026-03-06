@@ -188,10 +188,17 @@ export default function PipelineStepper({
               Run Full Pipeline
             </Button>
             
-            <Button 
+            <Button
               variant="outline"
               disabled={chapter.videoStatus !== "ready"}
               className="flex-1"
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = `/api/stories/${storyId}/chapters/${chapter.id}/download`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
             >
               Download Package
             </Button>

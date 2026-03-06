@@ -11,7 +11,7 @@ interface RouteParams {
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const { storyId, chapterId } = params;
+  const { storyId, chapterId } = await params;
   
   try {
     // 1. Auth check
