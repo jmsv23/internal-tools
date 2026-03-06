@@ -4,24 +4,43 @@ import { Pause, Play, Download } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface ChapterAudioPlayerProps {
-  audioUrl?: string;
+  audioPath?: string;
   title?: string;
+  chapterId?: string;
+  storyId?: string;
   onDownload?: () => void;
 }
 
-export default function ChapterAudioPlayer({ 
-  audioUrl, 
-  title = "Chapter Audio", 
-  onDownload 
+export default function ChapterAudioPlayer({
+  audioPath,
+  title = "Chapter Audio",
+  chapterId,
+  storyId,
+  onDownload
 }: ChapterAudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    if (!audioPath || !chapterId || !storyId) return;
+
+    fetch(`/api/stories/${storyId}/chapters/${chapterId}/audio-url?audioPath=${encodeURIComponent(audioPath)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.url) setSignedUrl(data.url);
+      })
+      .catch((err) => console.error("Failed to fetch audio signed URL:", err));
+  }, [audioPath, chapterId, storyId]);
+
+  useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !signedUrl) return;
+
+    audio.src = signedUrl;
+    audio.load();
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleLoadedMetadata = () => setDuration(audio.duration);
@@ -36,7 +55,7 @@ export default function ChapterAudioPlayer({
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [audioUrl]);
+  }, [signedUrl]);
 
   const togglePlayPause = () => {
     const audio = audioRef.current;
@@ -64,7 +83,7 @@ export default function ChapterAudioPlayer({
     }
   };
 
-  if (!audioUrl) {
+  if (!audioPath) {
     return (
       <Card>
         <CardContent className="p-4">
@@ -76,7 +95,7 @@ export default function ChapterAudioPlayer({
 
   return (
     <>
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <audio ref={audioRef} preload="metadata" />
       
       <Card>
         <CardHeader className="pb-3">

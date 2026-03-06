@@ -222,8 +222,10 @@ export default function PipelineStepper({
         {/* Audio Preview */}
         {(chapter.audioStatus === "ready" || chapter.audioStatus === "processing") && (
           <ChapterAudioPlayer 
-            audioUrl={chapter.audioUrl}
+            audioPath={chapter.audioUrl}
             title={`Chapter ${chapter.chapterNumber} Audio`}
+            chapterId={chapter.id}
+            storyId={storyId}
           />
         )}
       </div>
