@@ -4,10 +4,10 @@ import { db } from "@repo/db";
 import { generateGeminiTTSToStorage } from "@/lib/gemini/tts-generation";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     storyId: string;
     chapterId: string;
-  };
+  }>;
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {

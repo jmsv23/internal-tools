@@ -3,9 +3,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@repo/db";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     storyId: string;
-  };
+  }>;
 }
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -95,7 +95,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { storyId } = params;
+    const { storyId } = await params;
 
     // 2. Verify story ownership
     const story = await db.story.findFirst({

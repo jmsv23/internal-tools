@@ -6,7 +6,7 @@ import { getPresignedUrl } from "@/lib/store/minio";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { storyId: string; chapterId: string } }
+  { params }: { params: Promise<{ storyId: string; chapterId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({

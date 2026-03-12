@@ -5,10 +5,10 @@ import { generateImagePrompts } from "@/lib/stories/media-analysis";
 import { downloadStream } from "@/lib/store/minio";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     storyId: string;
     chapterId: string;
-  };
+  }>;
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {

@@ -7,7 +7,7 @@ import { downloadAndStoreImage } from "@/lib/image-generation/storage";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { storyId: string; chapterId: string } }
+  { params }: { params: Promise<{ storyId: string; chapterId: string }> }
 ) {
   try {
     // 1. Auth check

@@ -5,14 +5,14 @@ import { getChapterQueue } from "@/lib/queue";
 import { logger } from "@repo/logger";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     storyId: string;
     chapterId: string;
-  };
+  }>;
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const { storyId, chapterId } = params;
+  const { storyId, chapterId } = await params;
   
   try {
     // 1. Auth check

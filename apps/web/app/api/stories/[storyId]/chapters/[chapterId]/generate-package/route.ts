@@ -6,7 +6,7 @@ import { buildChapterPackage } from "@/lib/stories/package-builder";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { storyId: string; chapterId: string } }
+  { params }: { params: Promise<{ storyId: string; chapterId: string }> }
 ) {
   try {
     // 1. Auth check
@@ -120,7 +120,7 @@ export async function POST(
     
     // Update chapter status to failed if possible
     try {
-      const { storyId: _, chapterId } = params;
+      const { chapterId } = await params;
       await (db as any).chapter.update({
         where: { id: chapterId },
         data: { 

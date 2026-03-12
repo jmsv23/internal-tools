@@ -3,9 +3,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@repo/db";
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     storyId: string;
-  };
+  }>;
 }
 
 function calcProgress(chapters: { contentStatus: string; audioStatus: string; imagePromptsStatus: string; imagesStatus: string; videoStatus: string }[]) {

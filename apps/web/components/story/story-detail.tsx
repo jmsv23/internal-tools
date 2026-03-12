@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ChapterAccordion from "@/components/story/chapter-accordion";
 import PipelineStepper from "@/components/story/pipeline-stepper";
+import YouTubePublishingSection from "@/components/story/youtube-publishing-section";
 
 interface Story {
   id: string;
@@ -40,7 +41,7 @@ interface Chapter {
   images: any[];
 }
 
-export default function StoryDetailPage({ story }: { story: Story }) {
+export default function StoryDetailPage({ story }: { story: any }) {
   const storyId = story.id as string;
   const router = useRouter();
 
@@ -154,6 +155,10 @@ export default function StoryDetailPage({ story }: { story: Story }) {
             <p className="text-sm">{storyState.idea}</p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-8">
+        <YouTubePublishingSection storyId={storyId} storyTitle={storyState.title} />
       </div>
 
       <div className="space-y-4">

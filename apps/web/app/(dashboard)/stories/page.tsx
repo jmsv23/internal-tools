@@ -7,20 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StoryCard from "@/components/story/story-card";
 
-interface Story {
-  id: string;
-  title: string;
-  idea: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-  chapterCount: number;
-  completedSteps: number;
-  totalSteps: number;
-  progressPercentage: number;
-  chapters: any[];
-}
-
 export default async function StoriesListPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -77,7 +63,7 @@ export default async function StoriesListPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {stories.map((story: Story) => (
+          {stories.map((story: any) => (
             <StoryCard key={story.id} story={story} />
           ))}
         </div>

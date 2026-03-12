@@ -6,7 +6,7 @@ import { getPresignedUrl, downloadStream } from "@/lib/store/minio";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { storyId: string; chapterId: string } }
+  { params }: { params: Promise<{ storyId: string; chapterId: string }> }
 ) {
   try {
     // 1. Auth check
@@ -21,7 +21,7 @@ export async function GET(
       );
     }
 
-    const { storyId, chapterId } = params;
+    const { storyId, chapterId } = await params;
 
     // 2. Verify chapter exists and belongs to user
     const chapter = await (db as any).chapter.findFirst({
