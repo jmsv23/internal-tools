@@ -47,6 +47,7 @@ export default function StoryDetailPage({ story }: { story: Story }) {
   const [storyState, setStoryState] = useState<Story | null>(story);
   const [error, setError] = useState<string | null>(null);
   const [expandedChapters, setExpandedChapters] = useState<{ [key: string]: boolean }>({});
+  const [connectionKey, setConnectionKey] = useState(0);
 
   useEffect(() => {
     const es = new EventSource(`/api/stories/${storyId}/events`);
@@ -56,7 +57,7 @@ export default function StoryDetailPage({ story }: { story: Story }) {
       if (data.type === "story-update") {
         setStoryState(data.story);
       } else if (data.type === "complete") {
-        es.close(); // Prevent auto-reconnect from triggering onerror
+        es.close();
       } else if (data.type === "error") {
         setError(data.message ?? "Failed to load story");
         es.close();
@@ -74,7 +75,7 @@ export default function StoryDetailPage({ story }: { story: Story }) {
     return () => {
       es.close();
     };
-  }, [storyId]);
+  }, [storyId, connectionKey]);
 
   const toggleChapter = (chapterId: string) => {
     setExpandedChapters((prev) => ({
@@ -88,6 +89,8 @@ export default function StoryDetailPage({ story }: { story: Story }) {
     step: "content" | "audio" | "image-prompts" | "images" | "package"
   ) => {
     try {
+      setConnectionKey((k) => k + 1);
+
       const response = await fetch(
         `/api/stories/${storyId}/chapters/${chapterId}/generate-${step}`,
         { method: "POST" }
@@ -103,6 +106,7 @@ export default function StoryDetailPage({ story }: { story: Story }) {
 
   const handleRunFullPipeline = async (chapterId: string) => {
     try {
+      setConnectionKey((k) => k + 1);
       const response = await fetch(
         `/api/stories/${storyId}/chapters/${chapterId}/run-full-pipeline`,
         { method: "POST" }
